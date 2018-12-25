@@ -23,8 +23,14 @@ hs_err_pid*
 
 # Others
 .idea/
+.settings/
 target/
+convertImages/
 out/
 
 # Credentials
 database.properties
+
+#Other Files
+*.png
+*.jpg
