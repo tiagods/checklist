@@ -1,5 +1,5 @@
 package com.prolink.checklist;
-import com.prolink.checklist.controller.CheckListController;
+import com.prolink.checklist.controller.MenuController;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -12,7 +12,7 @@ public class StartApp extends Application{
 	public void start(Stage primaryStage) throws Exception {
 		// TODO Auto-generated method stub
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Menu.fxml"));
-		loader.setController(new CheckListController(primaryStage));
+		loader.setController(new MenuController(primaryStage));
 		Parent root = loader.load();
 		Scene scene = new Scene(root);
 		primaryStage.setScene(scene);

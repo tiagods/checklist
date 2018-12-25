@@ -21,6 +21,7 @@ import com.prolink.checklist.enuns.Mensageria;
 import com.prolink.checklist.model.*;
 import com.prolink.checklist.util.LeitorExcel;
 import com.prolink.checklist.util.LeitoraPDF;
+import com.prolink.checklist.util.UtilsFile;
 import com.prolink.model.CadastroBean;
 import com.prolink.model.ExcelGenerico;
 import javafx.application.Platform;
@@ -40,7 +41,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import jxl.write.WriteException;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.eclipse.jdt.internal.compiler.ast.Clinit;
 import org.fxutils.maskedtextfield.MaskTextField;
 import org.fxutils.maskedtextfield.MaskedTextField;
 
@@ -49,7 +49,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import static com.prolink.checklist.enuns.Mensageria.VALIDADO;
 
-public class CheckListController implements Initializable{
+public class MenuController extends UtilsController implements Initializable{
     @FXML
     private JFXTabPane tabPane;
     @FXML
@@ -148,57 +148,52 @@ public class CheckListController implements Initializable{
     private Stage stage;
 
     private ClienteDAO clienteDAO = new ClienteDAO();
-
-    private ArrayList<List<Indexador>> indexadors = new ArrayList<>();
-
     private Path ultimaPastaVisitada=null;
-
-
-
-    private List<Indexador> getIndexadorDefault(){
-        List<Indexador> index = new ArrayList<>();
-        index.add(new Indexador(0, "COD"));
-        index.add(new Indexador(1, "EMPRESA"));
-        index.add(new Indexador(2, "STATUS"));
-        index.add(new Indexador(3, "CNPJ"));
-        return index;
+    private Tabelas tabelas = Tabelas.getInstance();
+    private UtilsFile utilsFile = new UtilsFile();
+    
+    private ArrayList<List<Indexador>> indexadors = new ArrayList<>();
+    
+    public MenuController(Stage primaryStage) {
+    	this.stage=primaryStage;
+	}
+    private void carregarPastaPDF(){
+    	File file = utilsFile.carregarPasta(ultimaPastaVisitada);
+        if(file!=null){
+            txLocalizacaoPDF.setText(file.toString());
+            /*
+                //verificar se existe subdiretorios
+                File[] files = file.listFiles();
+                boolean sub = false;
+                for (File f : files) {
+                    if (f.isDirectory()) {
+                        sub = true;
+                        break;
+                    }
+                }
+                if (sub) alert(Alert.AlertType.WARNING,"Aviso","Subdiretorios detectado",
+                        "O sistema ainda não processa arquivos em subdiretorios, " +
+                                "\nDeixe os arquivos do formato PDF apenas na pasta:\n " + file.toString());
+                                */
+            ultimaPastaVisitada = file.toPath();
+        }
     }
-
-    public void alert(Alert.AlertType type,String titulo,String assunto, String mensagem){
-        Alert alert = new Alert(type);
-        alert.setTitle(titulo);
-        alert.setHeaderText(assunto);
-        alert.setContentText(mensagem);
-        if(type != Alert.AlertType.INFORMATION)
-            alert.getDialogPane().setMinSize(600,200);
-        alert.showAndWait();
+    private void carregarDatabase() {
+    	File file = utilsFile.carregarArquivo(ultimaPastaVisitada);
+        if(file!=null){
+            txLocalizacaoDatabase.setText(file.toString());
+            ultimaPastaVisitada = file.getParentFile().toPath();
+            processarExcel();
+        }
     }
-
-    public File carregarPasta(Path diretorioAnterior) {
-        Stage stage = new Stage();
-        DirectoryChooser fileChooser = new DirectoryChooser();
-        fileChooser.setTitle("Carregar");
-        Path file = diretorioAnterior==null?Paths.get(System.getProperty("user.home")):diretorioAnterior;
-        fileChooser.setInitialDirectory(file.toFile());
-        return fileChooser.showDialog(stage);
-    }
-    public File carregarArquivo(Path diretorioAnterior) {
-        Stage stage = new Stage();
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Carregar");
-        FileChooser.ExtensionFilter filter1 = new FileChooser.ExtensionFilter("Pasta de Tabalho do Excel (*.xlsx)", "*.xlsx");
-        FileChooser.ExtensionFilter filter2 = new FileChooser.ExtensionFilter("Pasta de Trabalho do Excel 97-2003 (*.xls)", "*.xls");
-        fileChooser.getExtensionFilters().addAll(filter1,filter2);
-        Path file = diretorioAnterior==null?Paths.get(System.getProperty("user.home")):diretorioAnterior;
-        fileChooser.setInitialDirectory(Files.isDirectory(file)?file.toFile():file.getParent().toFile());
-        return fileChooser.showOpenDialog(stage);
-    }
-
+    
     void combos(){
         tab1.setDisable(false);
         tab2.setDisable(true);
         tab3.setDisable(true);
 
+        cbLinhaExcel.valueProperty().addListener(event->refreshCombos(indexadors.get(cbLinhaExcel.getValue()-1)));
+        
         tabPane.getSelectionModel().selectFirst();
         btInicio.setOnAction(event -> {
             tabPane.getSelectionModel().select(tab2);
@@ -250,12 +245,7 @@ public class CheckListController implements Initializable{
             }
         });
         txLocalizacaoDatabase.setOnMouseClicked(event -> {
-            File file = carregarArquivo(ultimaPastaVisitada);
-            if(file!=null){
-                txLocalizacaoDatabase.setText(file.toString());
-                ultimaPastaVisitada = file.getParentFile().toPath();
-                processarExcel();
-            }
+            carregarDatabase();
         });
 
         cbFiltroSpecial.valueProperty().addListener((observable, oldValue, newValue) -> {
@@ -293,150 +283,16 @@ public class CheckListController implements Initializable{
         ckCnpj.setSelected(true);
 
         ckSelecionarFiltro.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            tbFiltro.getItems().stream().forEach(c->c.setHabilitado(newValue)); tbFiltro.refresh();});
-
-        //btProcessar.setVisible(false);
-
-        txLocalizacaoPDF.setOnMouseClicked(event -> {
-            File file = carregarPasta(ultimaPastaVisitada);
-            if(file!=null){
-                txLocalizacaoPDF.setText(file.toString());
-                /*
-                    //verificar se existe subdiretorios
-                    File[] files = file.listFiles();
-                    boolean sub = false;
-                    for (File f : files) {
-                        if (f.isDirectory()) {
-                            sub = true;
-                            break;
-                        }
-                    }
-                    if (sub) alert(Alert.AlertType.WARNING,"Aviso","Subdiretorios detectado",
-                            "O sistema ainda não processa arquivos em subdiretorios, " +
-                                    "\nDeixe os arquivos do formato PDF apenas na pasta:\n " + file.toString());
-                                    */
-                ultimaPastaVisitada = file.toPath();
-
+            tbFiltro.getItems().stream().forEach(c->c.setHabilitado(newValue)); 
+            tbFiltro.refresh();
             }
-        });
+        );
+
+        txLocalizacaoPDF.setOnMouseClicked(event -> carregarPastaPDF());
 
         btImpressao.setOnAction(event -> {
-            Integer[] larguraColunas = new Integer[]{12,15,20,20,43,43,43,43};
-            ArrayList<ArrayList> arrayList = new ArrayList<>();
-
-            ArrayList array1 = new ArrayList();
-            array1.add("CODIGO");
-            array1.add("STATUS");
-            array1.add("CNPJ");
-            array1.add("NOME");
-            array1.add("CODIGO NO NOME");
-            array1.add("VALIDACAO NOME");
-            array1.add("CNPJ CONTEUDO");
-            array1.add("VALIDACAO CONTEUDO-CNPJ");
-            arrayList.add(array1);
-
-            int cabecalhoPosition = arrayList.size()-1;
-
-            for(Resultado resultado : tbResultado.getItems()){
-                ArrayList<String> array2 = new ArrayList<>();
-                Cliente cliente = resultado.getCliente();
-                array2.add(String.valueOf(cliente.getId()));
-                array2.add(cliente.getStatus());
-                array2.add(cliente.getCnpj());
-                array2.add(cliente.getNome());
-
-                array2.add(resultado.getArquivoNome()
-                        .keySet()
-                        .stream()
-                        .map(s->s.getFileName().toString()+"="+resultado.getArquivoNome().get(s).toString())
-                        .collect(Collectors.joining("\n")));
-
-                if(resultado.getArquivoNome().isEmpty())
-                    array2.add(ckCodigo.isSelected()?(resultado.getStatus().equals(Resultado.Status.ERRO)?resultado.getMensageria().toString():Mensageria.ARQUIVONAOENCONTRADO.toString()):Mensageria.NOMEIGNORADO.toString());
-                else{
-                    array2.add(resultado.getArquivoNome()
-                            .values()
-                            .stream()
-                            .map(Mensageria::toString)
-                            .collect(Collectors.joining(";")));
-
-                }
-                array2.add(resultado.getArquivoConteudo()
-                        .keySet()
-                        .stream()
-                        .map(s->s.getFileName().toString()+"="+resultado.getArquivoConteudo().get(s).toString())
-                        .collect(Collectors.joining("\n")));
-
-                if(resultado.getArquivoConteudo().isEmpty())
-                    array2.add(ckCnpj.isSelected()?(resultado.getStatus().equals(Resultado.Status.ERRO)?resultado.getMensageria().toString():Mensageria.ARQUIVONAOENCONTRADO.toString())
-                            :Mensageria.CNPJIGNORADO.toString());
-                else{
-                    array2.add(resultado.getArquivoConteudo()
-                            .values()
-                            .stream()
-                            .map(Mensageria::toString)
-                            .collect(Collectors.joining(";")));
-                }
-                arrayList.add(array2);
-
-            }
-
-            ArrayList a1 = new ArrayList();
-            a1.add(Mensageria.VALIDADO.toString());
-            a1.add(Mensageria.VALIDADO.getDescricao());
-
-            ArrayList a2 = new ArrayList();
-            a2.add(Mensageria.ERROLEITURA.toString());
-            a2.add(Mensageria.ERROLEITURA.getDescricao());
-
-            ArrayList a3 = new ArrayList();
-            a3.add(Mensageria.LEITURAOCR.toString());
-            a3.add(Mensageria.LEITURAOCR.getDescricao());
-
-            ArrayList a4 = new ArrayList();
-            a4.add(Mensageria.LEITURAMANUAL.toString());
-            a4.add(Mensageria.LEITURAMANUAL.getDescricao());
-
-            ArrayList a5 = new ArrayList();
-            a5.add(Mensageria.ARQUIVOBRANCO.toString());
-            a5.add(Mensageria.ARQUIVOBRANCO.getDescricao());
-
-            ArrayList a6 = new ArrayList();
-            a6.add(Mensageria.EMPRESAINVALIDA.toString());
-            a6.add(Mensageria.EMPRESAINVALIDA.getDescricao());
-
-            ArrayList a7 = new ArrayList();
-            a7.add(Mensageria.ARQUIVONAOENCONTRADO.toString());
-            a7.add(Mensageria.ARQUIVONAOENCONTRADO.getDescricao());
-
-            arrayList.add(new ArrayList());
-
-            ArrayList arrayLegenda = new ArrayList();
-            arrayLegenda.add("LEGENDAS");
-            arrayList.add(arrayLegenda);
-            arrayList.add(a1);
-            arrayList.add(a2);
-            arrayList.add(a3);
-            arrayList.add(a4);
-            arrayList.add(a5);
-            arrayList.add(a6);
-            arrayList.add(a7);
-
-            SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
-            File file = new File(System.getProperty("java.io.tmpdir")+"/file-"+sdf.format(new Date())+".xls");
-            ExcelGenerico generico = new ExcelGenerico(file.getAbsolutePath(),arrayList,larguraColunas,cabecalhoPosition);
-            try {
-                generico.gerarExcel();
-                Desktop.getDesktop().open(file);
-            } catch (WriteException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+            imprimir(tbResultado,ckCodigo,ckCnpj);
         });
-
         hboxPlanilha.setVisible(false);
         hboxLinhaPlanilha.setVisible(false);
         hboxCombos.setVisible(false);
@@ -451,62 +307,59 @@ public class CheckListController implements Initializable{
 
         tbResultado.setFocusTraversable(true);
 
-        tbRelatorio.setOnMouseClicked(event -> {
-            Resumo resumo = tbRelatorio.getSelectionModel().getSelectedItem();
-            if(resumo!=null && resumo.getTotal()>0){
-                int index = tbResultado.getSelectionModel().getSelectedIndex();
-                System.out.println("Linha selecionada:"+index);
-
-                Resultado anterior = tbResultado.getSelectionModel().getSelectedItem();
-
-
-                Mensageria m = resumo.getMensageria();
-                List<Resultado> list = tbResultado.getItems().stream().filter(r->
-                        r.getArquivoConteudo().containsValue(m) ||
-                                r.getArquivoNome().containsValue(m) ||
-                                r.getMensageria().equals(m)
-                ).collect(Collectors.toList());
-
-                tbResultado.getItems().forEach(c->{
-                    if(c.getMensageria().equals(Mensageria.CNPJINVALIDO)) System.out.println(c.getCliente().toString()+"-"+c.getMensageria());
-                });
-
-                System.out.println("Tamanho lista:"+list.size());
-
-                int ultimo = list.size()-1;
-                int ant = list.contains(anterior)?list.indexOf(anterior):-1;
-
-                for (Resultado r : list) {
-                    if(tbResultado.getSelectionModel().getSelectedItem()==r) continue;
-                    else if(ant==ultimo) {
-                        tbResultado.getSelectionModel().select(list.get(0));
-                        index = tbResultado.getItems().indexOf(list.get(0));
-                        tbResultado.scrollTo(index);
-                        tbResultado.requestFocus();
-                        break;
-                    }
-                    else if(list.indexOf(r)>ant){
-                        tbResultado.getSelectionModel().select(r);
-                        index = tbResultado.getItems().indexOf(r);
-                        tbResultado.scrollTo(index);
-                        tbResultado.requestFocus();
-                        break;
-                    }
-                }
-            }
-        });
+        tbRelatorio.setOnMouseClicked(event -> localizarIndexResultado());
+        
+        
     }
 
-    public CheckListController(Stage primaryStage) {
-    	this.stage=primaryStage;
-	}
+    private void localizarIndexResultado() {
+    	Resumo resumo = tbRelatorio.getSelectionModel().getSelectedItem();
+        if(resumo!=null && resumo.getTotal()>0){
+            int index = tbResultado.getSelectionModel().getSelectedIndex();
+            System.out.println("Linha selecionada:"+index);
 
+            Resultado anterior = tbResultado.getSelectionModel().getSelectedItem();
+
+            Mensageria m = resumo.getMensageria();
+            List<Resultado> list = tbResultado.getItems().stream().filter(r->
+                    r.getArquivoConteudo().containsValue(m) ||
+                            r.getArquivoNome().containsValue(m) ||
+                            r.getMensageria().equals(m)
+            ).collect(Collectors.toList());
+
+            tbResultado.getItems().forEach(c->{
+                if(c.getMensageria().equals(Mensageria.CNPJINVALIDO)) System.out.println(c.getCliente().toString()+"-"+c.getMensageria());
+            });
+
+            int ultimo = list.size()-1;
+            int ant = list.contains(anterior)?list.indexOf(anterior):-1;
+
+            for (Resultado r : list) {
+                if(tbResultado.getSelectionModel().getSelectedItem()==r) continue;
+                else if(ant==ultimo) {
+                    tbResultado.getSelectionModel().select(list.get(0));
+                    index = tbResultado.getItems().indexOf(list.get(0));
+                    tbResultado.scrollTo(index);
+                    tbResultado.requestFocus();
+                    break;
+                }
+                else if(list.indexOf(r)>ant){
+                    tbResultado.getSelectionModel().select(r);
+                    index = tbResultado.getItems().indexOf(r);
+                    tbResultado.scrollTo(index);
+                    tbResultado.requestFocus();
+                    break;
+                }
+            }
+        }
+    }
+	
 	@Override
     public void initialize(URL location, ResourceBundle resources) {
     	combos();
-    	tabela();
-        tabelaResultado();
-        tabelaRelatorio();
+    	tabelas.tabelaFiltro(tbFiltro);
+    	tabelas.tabelaRelatorio(tbRelatorio);
+    	tabelas.tabelaResultado(tbResultado, ckCodigo, ckCnpj);
     }
     private void processarExcel(){
         LeitorExcel excel = new LeitorExcel();
@@ -523,7 +376,8 @@ public class CheckListController implements Initializable{
             for(int i = 1; i < linhas-1; i++){
                 linhaset.add(i);
             }
-            cbLinhaExcel.getItems().setAll(linhas);
+            cbLinhaExcel.getItems().clear();
+            cbLinhaExcel.getItems().addAll(linhaset);
             cbLinhaExcel.setValue(1);
             refreshCombos(indexadors.get(cbLinhaExcel.getValue()-1));
         }
@@ -579,7 +433,6 @@ public class CheckListController implements Initializable{
                     if(ckCnpj.isSelected() && cbCnpj.getValue()!=null && index.getIndex()==cbCnpj.getValue().getIndex()){
                         cliente.setCnpj(index.getValor());
                     }
-
                 }
                 clientes.add(cliente);
             }
@@ -607,8 +460,6 @@ public class CheckListController implements Initializable{
         }
         System.out.println(novoCaminho.toString());
 */
-        tabelaResultado();
-
         tabPane.getSelectionModel().select(tab3);
         tab1.setDisable(true);
         tab2.setDisable(true);
@@ -711,14 +562,13 @@ public class CheckListController implements Initializable{
     }
 
     private List<Resumo> recalcular(){
-
         List<Resumo> list = new ArrayList<>();
 
         //VALIDADO("VALIDADO"),ERROLEITURA("ERRO DE LEITURA"),LEITURAOCR("VALIDADO POR IA"),
         //        LEITURAMANUAL("VALIDADO MANUALMENTE"),ARQUIVOBRANCO("ARQUIVO EM BRANCO"),
 
         int erroLeitura=0,arquivoBranco=0, validado = 0, arquivoNaoEncontrado=0, leituraOcr=0;
-
+        
         for (Resultado resultado : tbResultado.getItems()) {
             if(ckCnpj.isSelected() && ckCodigo.isSelected()) {
                 validado += resultado.getArquivoNome().containsValue(Mensageria.VALIDADO) ||
@@ -730,6 +580,7 @@ public class CheckListController implements Initializable{
                 erroLeitura += resultado.getArquivoNome().containsValue(Mensageria.ERROLEITURA) ||
                         resultado.getArquivoConteudo().containsValue(Mensageria.ERROLEITURA)?1:0;
                 leituraOcr += resultado.getArquivoConteudo().containsValue(Mensageria.LEITURAOCR)?1:0;
+                
             }
             else if(!ckCnpj.isSelected()){
                 validado += resultado.getArquivoNome().containsValue(Mensageria.VALIDADO)?1:0;
@@ -745,9 +596,9 @@ public class CheckListController implements Initializable{
                 leituraOcr += resultado.getArquivoConteudo().containsValue(Mensageria.LEITURAOCR)?1:0;
             }
         }
-        if(ckCnpj.isSelected())
-            list.add(new Resumo(Mensageria.CNPJINVALIDO,(int)tbResultado.getItems().stream().
+        if(ckCnpj.isSelected()) list.add(new Resumo(Mensageria.CNPJINVALIDO,(int)tbResultado.getItems().stream().
                     filter(c->!c.getCliente().isCnpjValido()).count()));
+        
         list.add(new Resumo(Mensageria.VALIDADO,validado));
         list.add(new Resumo(Mensageria.LEITURAOCR,leituraOcr));
         list.add(new Resumo(Mensageria.ERROLEITURA, erroLeitura));
@@ -763,7 +614,7 @@ public class CheckListController implements Initializable{
         cbFiltroSpecial.getItems().clear();
         cbCnpj.getItems().clear();
         tbFiltro.getItems().clear();
-
+        
         if(cbObrigacao.getValue()!=null) {
             if(indexadors!=null) {
                 cbCodigo.getItems().setAll(indexadors);
@@ -787,166 +638,9 @@ public class CheckListController implements Initializable{
                 cbStatus.getSelectionModel().select(0);
                 cbCnpj.getSelectionModel().select(0);
             }
-
         }
     }
-
     private void setTxProgresso(String text){
-        Platform.runLater(() ->txProgresso.setText(text));
-    }
-    private void tabela(){
-        TableColumn<Indexador, Boolean> colunaEditar = new TableColumn<>("");
-        colunaEditar.setCellValueFactory(new PropertyValueFactory<>("habilitado"));
-        colunaEditar.setCellFactory((TableColumn<Indexador, Boolean> param) -> {
-            final TableCell<Indexador, Boolean> cell = new TableCell<Indexador, Boolean>() {
-                final JFXCheckBox checkBox = new JFXCheckBox("");
-                @Override
-                protected void updateItem(Boolean item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty) {
-                        setGraphic(null);
-                        setText(null);
-                    } else {
-                        checkBox.setSelected(item);
-                        checkBox.selectedProperty().addListener((observable, oldValue, newValue) ->
-                            tbFiltro.getItems().get(getIndex()).setHabilitado(newValue)
-                        );
-                        setGraphic(checkBox);
-                        setText(null);
-                    }
-                }
-            };
-            return cell;
-        });
-        colunaEditar.setPrefWidth(40);
-        TableColumn<Indexador, String> colunaNome = new TableColumn<>("");
-        colunaNome.setCellValueFactory(new PropertyValueFactory<>("valor"));
-        colunaNome.setPrefWidth(150);
-        tbFiltro.getColumns().addAll(colunaEditar,colunaNome);
-    }
-
-    private void tabelaRelatorio(){
-        TableColumn<Resumo, Mensageria> colunaNome = new TableColumn<>("Nome");
-        colunaNome.setCellValueFactory(new PropertyValueFactory<>("mensageria"));
-
-        TableColumn<Resumo, Integer> colunaValor = new TableColumn<>("Total");
-        colunaValor.setCellValueFactory(new PropertyValueFactory<>("total"));
-
-        TableColumn<Resumo, Boolean> colunaIntervencao = new TableColumn<>("");
-        colunaIntervencao.setCellValueFactory(new PropertyValueFactory<>("intervencao"));
-        colunaIntervencao.setCellFactory((TableColumn<Resumo, Boolean> param) -> {
-            final TableCell<Resumo, Boolean> cell = new TableCell<Resumo, Boolean>() {
-                @Override
-                protected void updateItem(Boolean item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty) {
-                        setGraphic(null);
-                        setText(null);
-                    } else {
-                        Resumo r = tbRelatorio.getItems().get(getIndex());
-                        if(r.getTotal()>0 && r.getMensageria().getStatus().equals(Mensageria.Status.ERRO))
-                            setText("NECESSÁRIO INTERVENÇÃO");
-                        else
-                            setText("");
-                    }
-                }
-            };
-            return cell;
-        });
-        tbRelatorio.getColumns().addAll(colunaNome,colunaValor,colunaIntervencao);
-    }
-    private void tabelaResultado(){
-        tbResultado.getColumns().clear();
-        TableColumn<Resultado, Cliente> colunaCliente = new TableColumn<>("CLIENTE");
-        colunaCliente.setCellValueFactory(new PropertyValueFactory<>("cliente"));
-        colunaCliente.setPrefWidth(150);
-        colunaCliente.setCellFactory((TableColumn<Resultado, Cliente> param) -> {
-            final TableCell<Resultado, Cliente> cell = new TableCell<Resultado, Cliente>() {
-                @Override
-                protected void updateItem(Cliente item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty) {
-                        setGraphic(null);
-                        setText(null);
-                    } else {
-                        setText(item.toString());
-                    }
-                }
-            };
-            return cell;
-        });
-        TableColumn<Resultado, Map<Path,Mensageria>> colunaId = new TableColumn<>("NOME NO ARQUIVO");
-        colunaId.setCellValueFactory(new PropertyValueFactory<>("arquivoNome"));
-        colunaId.setCellFactory((TableColumn<Resultado, Map<Path,Mensageria>> param) -> {
-            final TableCell<Resultado, Map<Path,Mensageria>> cell = new TableCell<Resultado, Map<Path,Mensageria>>() {
-                final JFXTextArea textArea = new JFXTextArea();
-                @Override
-                protected void updateItem(Map<Path,Mensageria> item, boolean empty) {
-                    super.updateItem(item, empty);
-                    textArea.setEditable(false);
-                    textArea.setWrapText(true);
-                    if (empty) {
-                        setGraphic(null);
-                        setText(null);
-                    } else {
-                        if(item.isEmpty()){
-                            setGraphic(null);
-                            setText(ckCodigo.isSelected()?
-                                    Mensageria.ARQUIVONAOENCONTRADO.toString():
-                                    "");
-                        }
-                        else {
-                            StringBuilder builder = new StringBuilder();
-                            item.keySet().forEach(c -> builder.append(c.getFileName()).append("=").append(item.get(c)).append("\n"));
-                            textArea.setText(builder.toString().trim());
-                            setGraphic(textArea);
-                            setText(null);
-                        }
-                    }
-                }
-            };
-            return cell;
-        });
-        TableColumn<Resultado, Map<Path,Mensageria>> colunaConteudo = new TableColumn<>("CONTEUDO DO ARQUIVO");
-        colunaConteudo.setCellValueFactory(new PropertyValueFactory<>("arquivoConteudo"));
-        colunaConteudo.setCellFactory((TableColumn<Resultado, Map<Path,Mensageria>> param) -> {
-            final TableCell<Resultado, Map<Path,Mensageria>> cell = new TableCell<Resultado, Map<Path,Mensageria>>() {
-                final JFXTextArea textArea = new JFXTextArea();
-                @Override
-                protected void updateItem(Map<Path,Mensageria> item, boolean empty) {
-                    super.updateItem(item, empty);
-                    textArea.setEditable(false);
-                    textArea.setWrapText(true);
-                    if (item==null || empty) {
-                        setGraphic(null);
-                        setText(null);
-                    } else {
-                        Resultado result = tbResultado.getItems().get(getIndex());
-                        if(item.isEmpty()){
-                            setGraphic(null);
-                            setText(ckCnpj.isSelected()?
-                                    (result.getCliente().isCnpjValido()?Mensageria.ARQUIVONAOENCONTRADO.toString()
-                                            :Mensageria.CNPJINVALIDO.toString()):
-                                    "");
-                        }
-                        else {
-                            StringBuilder builder = new StringBuilder();
-                            item.keySet().forEach(c -> builder.append(c.getFileName()).append("=").append(item.get(c)).append("\n"));
-                            textArea.setText(builder.toString().trim());
-                            setGraphic(textArea);
-                            setText(null);
-                        }
-
-                    }
-                }
-            };
-            return cell;
-        });
-        tbResultado.setFixedCellSize(50);
-        tbResultado.getColumns().add(colunaCliente);
-        if(ckCodigo.isSelected())
-            tbResultado.getColumns().add(colunaId);
-        if(ckCnpj.isSelected())
-            tbResultado.getColumns().add(colunaConteudo);
+        Platform.runLater(() -> txProgresso.setText(text));
     }
 }

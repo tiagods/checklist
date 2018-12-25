@@ -11,6 +11,8 @@ import java.sql.SQLException;
 import java.text.Normalizer;
 import java.util.*;
 
+import org.postgresql.util.PSQLException;
+
 public class ClienteDAO{
 	private Conexao conexao = new Conexao();
 
@@ -26,17 +28,16 @@ public class ClienteDAO{
                 Indexador filtro = new Indexador(indexador.getIndex(),rs.getString(1));
                 list.add(filtro);
             }
-            return list;
         }catch (SQLException e){
             e.printStackTrace();
-            return null;
         }finally {
             try {
                 if(con!=null) con.close();
             }catch (SQLException e){
             }
         }
-    }
+        return list;
+	}
     public List<Cliente> listarPor(Indexador indexador, List<Indexador> values){
         Connection con = null;
         try {

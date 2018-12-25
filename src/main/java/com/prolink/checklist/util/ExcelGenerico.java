@@ -25,15 +25,18 @@ public class ExcelGenerico {
 	private WritableCellFormat fontPadrao2;
 	
 	private String arquivoSaida;
+	@SuppressWarnings("rawtypes")
 	private ArrayList<ArrayList<String>> lista;
 	private Integer[] larguraColunas;
-	
-	public ExcelGenerico(String saida, ArrayList<ArrayList<String>> lista, Integer[] larguraColunas){
+	private int cabecalhoPosicao;
+	@SuppressWarnings("rawtypes")
+	public ExcelGenerico(String saida, ArrayList<ArrayList<String>> lista, Integer[] larguraColunas, int cabecalhoPosicao){
 		this.arquivoSaida=saida;
 		this.lista=lista;
 		this.larguraColunas=larguraColunas;
+		this.cabecalhoPosicao = cabecalhoPosicao;
 	}
-	public void gerarExcel() throws NullPointerException, IOException, WriteException{
+	public void gerarExcel() throws IOException, WriteException{
 		WorkbookSettings wbSettings = new WorkbookSettings();
 		wbSettings.setLocale(new Locale("pt","BR"));
 		File arquivo = new File(arquivoSaida);
@@ -53,7 +56,7 @@ public class ExcelGenerico {
 		fontCabecalho.setBackground(Colour.OCEAN_BLUE);
 		fontCabecalho.setAlignment(jxl.format.Alignment.CENTRE);
 		
-		WritableFont font2 = new WritableFont(WritableFont.TIMES,11,WritableFont.BOLD);
+		WritableFont font2 = new WritableFont(WritableFont.TIMES,11,WritableFont.NO_BOLD);
 		fontPadrao1 = new WritableCellFormat(font2);
 		fontPadrao1.setBorder(Border.BOTTOM, BorderLineStyle.HAIR,corBorda);
 		//fontPadrao1.setBackground(Colour.getInternalColour(new Color(128,122,217).getRGB()));
@@ -63,29 +66,29 @@ public class ExcelGenerico {
 		
 		//fontPadrao2.setBackground(Colour.getInternalColour(new Color(160,0,240).getRGB()));
 		fontPadrao2.setBackground(Colour.WHITE);
-		gerarConteudo(sheet, lista);	
+		gerarConteudo(sheet, lista);
 		
 		workbook.write();
 		workbook.close();
 	}
-	private void gerarConteudo(WritableSheet sheet, ArrayList<ArrayList<String>> lista)throws NullPointerException,WriteException, RowsExceededException{
+	@SuppressWarnings("rawtypes")
+	private void gerarConteudo(WritableSheet sheet, ArrayList<ArrayList<String>> lista)throws WriteException,RowsExceededException{
 		if(!lista.isEmpty()){
 			//gerando celulas com nome da coluna
 			for(int i = 0; i<larguraColunas.length;i++)
 				sheet.setColumnView(i, larguraColunas[i]);
-			for(int coluna=0; coluna<lista.get(0).size();coluna++){
-				addValor(sheet, coluna,0,lista.get(0).get(coluna).toString(),fontCabecalho);
-			}
-			for(int linha=1;linha<lista.size();linha++){
+			for(int linha=0;linha<lista.size();linha++){
 				WritableCellFormat novoFormato = null;
-				if(linha%2==0){
+				if(cabecalhoPosicao==linha){
+                    novoFormato = fontCabecalho;
+                }
+				else if(linha%2==0 && linha>cabecalhoPosicao){
 					novoFormato = fontPadrao2;
 				}
-				else{
+				else
 					novoFormato = fontPadrao1;
-				}
 				for(int coluna=0;coluna<lista.get(linha).size();coluna++){
-					addValor(sheet, coluna,linha,lista.get(linha).get(coluna).toString(),novoFormato);
+				    addValor(sheet, coluna,linha,lista.get(linha).get(coluna).toString(),novoFormato);
 				}
 			}
 		}
