@@ -31,7 +31,6 @@ public class PdfParaImagem {
           File input = new File("teste.pdf");
           PDDocument doc = PDDocument.load(new FileInputStream(input));
           PDFRenderer pdfRenderer = new PDFRenderer(doc);
-          
           BufferedImage[] bf = new BufferedImage[doc.getNumberOfPages()];
           for(int page = 0; page<doc.getNumberOfPages(); page++){
         	  BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 200,ImageType.RGB);

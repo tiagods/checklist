@@ -13,6 +13,9 @@ public class StartApp extends Application{
 		// TODO Auto-generated method stub
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Menu.fxml"));
 		loader.setController(new MenuController(primaryStage));
+		//FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MenuImage.fxml"));
+		//ImageController controller = new ImageController(primaryStage);
+		//loader.setController(controller);
 		Parent root = loader.load();
 		Scene scene = new Scene(root);
 		primaryStage.setScene(scene);

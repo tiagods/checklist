@@ -3,9 +3,9 @@ package com.prolink.checklist.controller;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,14 +14,28 @@ import com.prolink.checklist.enuns.Mensageria;
 import com.prolink.checklist.model.Cliente;
 import com.prolink.checklist.model.Indexador;
 import com.prolink.checklist.model.Resultado;
+import com.prolink.checklist.model.Resumo;
 import com.prolink.checklist.util.ExcelGenerico;
 
-import javafx.scene.control.*;
 import javafx.scene.control.Alert;
+import javafx.scene.control.TableView;
+import javafx.stage.Stage;
 import jxl.write.WriteException;
 
-public class UtilsController {
-    public void alert(Alert.AlertType type,String titulo,String assunto, String mensagem){
+public abstract class UtilsController {
+    
+	private TableView<Resultado> tbResultado;
+	private JFXCheckBox ckCodigo;
+	private JFXCheckBox ckCnpj;
+	
+	public UtilsController(){
+	}
+	public void initialize(TableView<Resultado> tbResultado,JFXCheckBox ckCodigo,JFXCheckBox ckCnpj){
+		this.tbResultado=tbResultado;;
+		this.ckCodigo=ckCodigo;
+		this.ckCnpj=ckCnpj;
+	}
+	public void alert(Alert.AlertType type,String titulo,String assunto, String mensagem){
         Alert alert = new Alert(type);
         alert.setTitle(titulo);
         alert.setHeaderText(assunto);
@@ -39,7 +53,7 @@ public class UtilsController {
         return index;
     }
     
-    public void imprimir(TableView<Resultado> tbResultado,JFXCheckBox ckCodigo,JFXCheckBox ckCnpj) {
+    public void imprimir() {
     	Integer[] larguraColunas = new Integer[]{12,15,20,20,43,43,43,43};
         ArrayList<ArrayList<String>> arrayList = new ArrayList<>();
         ArrayList<String> array1 = new ArrayList<String>();
@@ -166,6 +180,50 @@ public class UtilsController {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+    public List<Resumo> recalcular(){
+        List<Resumo> list = new ArrayList<>();
+        //VALIDADO("VALIDADO"),ERROLEITURA("ERRO DE LEITURA"),LEITURAOCR("VALIDADO POR IA"),
+        //        LEITURAMANUAL("VALIDADO MANUALMENTE"),ARQUIVOBRANCO("ARQUIVO EM BRANCO"),
+
+        int erroLeitura=0,arquivoBranco=0, validado = 0, arquivoNaoEncontrado=0, leituraOcr=0;
+        
+        for (Resultado resultado : tbResultado.getItems()) {
+            if(ckCnpj.isSelected() && ckCodigo.isSelected()) {
+                validado += resultado.getArquivoNome().containsValue(Mensageria.VALIDADO) ||
+                        resultado.getArquivoConteudo().containsValue(Mensageria.VALIDADO)?1:0;
+                arquivoNaoEncontrado += resultado.getArquivoNome().size() == 0 || resultado.getArquivoConteudo().size() == 0 ? 1 : 0;
+                arquivoBranco += resultado.getArquivoNome().containsValue(Mensageria.ARQUIVOBRANCO) ||
+                        resultado.getArquivoConteudo().containsValue(Mensageria.ARQUIVOBRANCO)?1:0;
+
+                erroLeitura += resultado.getArquivoNome().containsValue(Mensageria.ERROLEITURA) ||
+                        resultado.getArquivoConteudo().containsValue(Mensageria.ERROLEITURA)?1:0;
+                leituraOcr += resultado.getArquivoConteudo().containsValue(Mensageria.LEITURAOCR)?1:0;
+                
+            }
+            else if(!ckCnpj.isSelected()){
+                validado += resultado.getArquivoNome().containsValue(Mensageria.VALIDADO)?1:0;
+                arquivoNaoEncontrado += resultado.getArquivoNome().size()==0?1:0;
+                arquivoBranco += resultado.getArquivoNome().containsValue(Mensageria.ARQUIVOBRANCO)?1:0;
+                erroLeitura += resultado.getArquivoNome().containsValue(Mensageria.ERROLEITURA)?1:0;
+            }
+            else{
+                validado += resultado.getArquivoConteudo().containsValue(Mensageria.VALIDADO)?1:0;
+                arquivoNaoEncontrado += resultado.getArquivoConteudo().size()==0?1:0;
+                arquivoBranco += resultado.getArquivoConteudo().containsValue(Mensageria.ARQUIVOBRANCO)?1:0;
+                erroLeitura += resultado.getArquivoConteudo().containsValue(Mensageria.ERROLEITURA)?1:0;
+                leituraOcr += resultado.getArquivoConteudo().containsValue(Mensageria.LEITURAOCR)?1:0;
+            }
+        }
+        if(ckCnpj.isSelected()) list.add(new Resumo(Mensageria.CNPJINVALIDO,(int)tbResultado.getItems().stream().
+                    filter(c->!c.getCliente().isCnpjValido()).count()));
+        
+        list.add(new Resumo(Mensageria.VALIDADO,validado));
+        list.add(new Resumo(Mensageria.LEITURAOCR,leituraOcr));
+        list.add(new Resumo(Mensageria.ERROLEITURA, erroLeitura));
+        list.add(new Resumo(Mensageria.ARQUIVOBRANCO, arquivoBranco));
+        list.add(new Resumo(Mensageria.ARQUIVONAOENCONTRADO, arquivoNaoEncontrado));
+        return list;
     }
 
 }

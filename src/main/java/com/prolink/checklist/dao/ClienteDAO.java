@@ -13,22 +13,23 @@ import java.util.*;
 
 import org.postgresql.util.PSQLException;
 
-public class ClienteDAO{
-	private Conexao conexao = new Conexao();
-
+public class ClienteDAO extends Conexao{
+	public boolean verificarConexao() {
+		return getCon()!=null;
+	}
 	public Set<Indexador> findBy(Indexador indexador){
         Set<Indexador> list = new HashSet<>();
         Connection con = null;
         try {
             String sql = "select distinct ("+indexador.getValor()+") from CLIENTE order by "+indexador.getValor();
-            con = conexao.getCon();
+            con = getCon();
             PreparedStatement ps = con.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             while(rs.next()){
                 Indexador filtro = new Indexador(indexador.getIndex(),rs.getString(1));
                 list.add(filtro);
             }
-        }catch (SQLException e){
+        }catch (Exception e){
             e.printStackTrace();
         }finally {
             try {
@@ -41,7 +42,7 @@ public class ClienteDAO{
     public List<Cliente> listarPor(Indexador indexador, List<Indexador> values){
         Connection con = null;
         try {
-            con = conexao.getCon();
+        	con = getCon();
             String sql = "select COD,EMPRESA, STATUS, CNPJ from CLIENTE where "+indexador.getValor()+" in (";
 
             StringBuilder builder = new StringBuilder();
@@ -54,9 +55,8 @@ public class ClienteDAO{
             PreparedStatement ps = con.prepareStatement(sql);
             for(int i = 1; i <=values.size(); i++)
                 ps.setString(i, values.get(i - 1).getValor());
-
             return pesquisa(ps);
-        }catch (SQLException e){
+        }catch (Exception e){
             e.printStackTrace();
             return null;
         }finally {
@@ -66,7 +66,7 @@ public class ClienteDAO{
             }
         }
     }
-    List<Cliente> pesquisa(PreparedStatement ps) throws SQLException{
+    List<Cliente> pesquisa(PreparedStatement ps) throws Exception{
         List<Cliente> clientes = new ArrayList<>();
         Set<Cliente> clienteSet = new HashSet<>();
         ResultSet rs = ps.executeQuery();
@@ -86,11 +86,11 @@ public class ClienteDAO{
     public List<Cliente> listar(){
         Connection con = null;
         try {
-            con = conexao.getCon();
+            con = getCon();
             String sql = "select COD,EMPRESA, STATUS, CNPJ from CLIENTE order by COD";
             PreparedStatement ps = con.prepareStatement(sql);
             return pesquisa(ps);
-        }catch (SQLException e){
+        }catch (Exception e){
             e.printStackTrace();
             return null;
         }finally {try {if(con!=null) con.close();}catch (SQLException e){}}

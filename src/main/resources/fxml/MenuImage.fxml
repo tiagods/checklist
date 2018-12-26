@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXTextArea?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane fx:id="anchorPane" prefHeight="600.0" prefWidth="1060.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <VBox fx:id="vBoxLeft" layoutX="-9.0" prefHeight="600.0" prefWidth="300.0" AnchorPane.leftAnchor="0.0">
+         <children>
+            <HBox alignment="TOP_CENTER" prefHeight="43.0" prefWidth="237.0">
+               <children>
+                  <JFXButton fx:id="btPrimeiro" text="&lt;&lt;" />
+                  <JFXButton fx:id="btAnterior" text="&lt;" />
+                  <JFXTextField fx:id="txValor1" alignment="CENTER" editable="false" prefColumnCount="3" />
+                  <Label alignment="CENTER" prefHeight="26.0" prefWidth="14.0" text="de" />
+                  <JFXTextField fx:id="txValor2" alignment="CENTER" editable="false" layoutX="68.0" layoutY="10.0" prefColumnCount="3" />
+                  <JFXButton fx:id="btProximo" text="&gt;" />
+                  <JFXButton fx:id="btUltimo" text="&gt;&gt;" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="10.0" prefHeight="43.0" prefWidth="300.0">
+               <children>
+                  <Label text="Nome:" />
+                  <JFXTextField fx:id="txNome" editable="false" layoutX="68.0" layoutY="10.0" prefColumnCount="3" prefHeight="25.0" prefWidth="198.0" style="-fx-border-width: 2px;" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="53.0" prefHeight="43.0" prefWidth="300.0">
+               <children>
+                  <Label text="Status:" />
+                  <JFXTextField fx:id="txStatus" editable="false" layoutX="68.0" layoutY="10.0" prefColumnCount="3" prefHeight="25.0" prefWidth="198.0" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="96.0" prefHeight="43.0" prefWidth="300.0">
+               <children>
+                  <Label text="CNPJ:" />
+                  <JFXTextField fx:id="txCnpj" editable="false" layoutX="68.0" layoutY="10.0" prefColumnCount="3" prefHeight="25.0" prefWidth="198.0" />
+               </children>
+            </HBox>
+            <HBox layoutX="10.0" layoutY="139.0" prefHeight="80.0" prefWidth="250.0">
+               <children>
+                  <Label text="Resultado:" />
+                  <JFXTextArea fx:id="txResultado" editable="false" prefHeight="80.0" prefWidth="189.0" />
+               </children>
+            </HBox>
+            <HBox alignment="TOP_CENTER" layoutX="10.0" layoutY="139.0" prefHeight="43.0" prefWidth="300.0">
+               <children>
+                  <JFXButton fx:id="btValidar" text="Validar" />
+                  <JFXButton fx:id="btRejeitar" layoutX="10.0" layoutY="10.0" text="Rejeitar" />
+                  <JFXButton fx:id="btSair" layoutX="62.0" layoutY="10.0" text="Sair" />
+               </children>
+            </HBox>
+            <JFXTextArea fx:id="txSobre" editable="false" prefHeight="297.0" prefWidth="250.0" text="O Checklist consegue ler arquivos PDF gravados no formato TEXTO, um formato que permite leitura de caracteres (chamados de STRINGS), em 1º caso pode ser impossivel a leitura de texto, ai entra o recurso de OCR (Inteligencia Artificial) que são imagens, essa tecnologia permite extrair textos de imagens, esse resultado é retornado nessa area para validação manual que trata PDF do tipo Imagem.O PDF que teve o seu nome validado mas o conteudo não foi lido, será mostrado no painel a direita, no momento válido apenas para a 1ª página do arquivo PDF, Todos os resultados, VALIDOS ou INVALIDOS serão retornados para sua ultima análise se achar necessário, você deve comparar os campos que achar conveniente e Validar se concordar com o resultado mostrado, caso contrário Rejeitar. Sua ação será encaminhada imediatamente para a tabela de resultados no menu principal." />
+         </children>
+      </VBox>
+      <ScrollPane fx:id="scroll" fitToHeight="true" fitToWidth="true" layoutX="339.0" prefHeight="608.0" prefWidth="397.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="310.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <content>
+            <ImageView fx:id="imageView" fitHeight="596.0" fitWidth="535.0" pickOnBounds="true" preserveRatio="true" />
+         </content>
+      </ScrollPane>
+   </children>
+</AnchorPane>

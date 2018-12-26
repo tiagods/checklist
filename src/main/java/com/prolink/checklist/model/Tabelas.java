@@ -1,31 +1,63 @@
 package com.prolink.checklist.model;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Map;
+
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXCheckBox;
 import com.jfoenix.controls.JFXTextArea;
+import com.prolink.checklist.controller.ImageController;
+import com.prolink.checklist.controller.UtilsController;
 import com.prolink.checklist.enuns.Mensageria;
-import com.prolink.checklist.util.ImageView;
 
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-
-import java.nio.file.Path;
-import java.util.Map;
-
-import javax.swing.JFrame;
+import javafx.stage.Stage;
 
 public class Tabelas {
     
 	private static Tabelas instance;
 	
-    public static Tabelas getInstance() {
-		if(instance==null) instance = new Tabelas();
+	private TableView<Indexador> tbFiltro;
+	private TableView<Resumo> tbRelatorio;
+	private TableView<Resultado> tbResultado;
+	
+	private UtilsController controller;
+	
+    public static Tabelas getInstance(UtilsController controller) {
+		if(instance==null) instance = new Tabelas(controller);
 		return instance;
 	}
-	
+    public Tabelas(UtilsController controller) {
+		this.controller=controller;
+	}
+    private void abrirPainelVerificador(Cliente cliente, Map<Path, Mensageria> item) {
+    	try {
+    		Stage stage = new Stage();
+    		FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MenuImage.fxml"));
+    		ImageController control = new ImageController(stage,cliente,item);
+    		loader.setController(control);
+    		Parent root = loader.load();
+    		Scene scene = new Scene(root);
+    		stage.setScene(scene);
+    		stage.show();
+    		stage.onHidingProperty().addListener(e->{
+    			controller.recalcular();
+    			tbResultado.refresh();
+    			tbRelatorio.refresh();
+    		});
+    	}catch(IOException e) {
+    		e.printStackTrace();
+    	}
+	}
 	public void tabelaFiltro(TableView<Indexador> tbFiltro){
+		this.tbFiltro=tbFiltro;
         TableColumn<Indexador, Boolean> colunaEditar = new TableColumn<>("");
         colunaEditar.setCellValueFactory(new PropertyValueFactory<>("habilitado"));
         colunaEditar.setCellFactory((TableColumn<Indexador, Boolean> param) -> {
@@ -56,6 +88,7 @@ public class Tabelas {
         tbFiltro.getColumns().addAll(colunaEditar,colunaNome);
     }
     public void tabelaRelatorio(TableView<Resumo> tbRelatorio){
+    	this.tbRelatorio=tbRelatorio;
         TableColumn<Resumo, Mensageria> colunaNome = new TableColumn<>("Nome");
         colunaNome.setCellValueFactory(new PropertyValueFactory<>("mensageria"));
 
@@ -86,7 +119,8 @@ public class Tabelas {
         tbRelatorio.getColumns().addAll(colunaNome,colunaValor,colunaIntervencao);
     }
     public void tabelaResultado(TableView<Resultado> tbResultado,JFXCheckBox ckCodigo,JFXCheckBox ckCnpj){
-        tbResultado.getColumns().clear();
+        this.tbResultado=tbResultado;
+    	tbResultado.getColumns().clear();
         TableColumn<Resultado, Cliente> colunaCliente = new TableColumn<>("CLIENTE");
         colunaCliente.setCellValueFactory(new PropertyValueFactory<>("cliente"));
         colunaCliente.setPrefWidth(150);
@@ -154,10 +188,7 @@ public class Tabelas {
                         else {
                         	Resultado resultado = tbResultado.getItems().get(getIndex());
                             button.setText("Abrir Arquivo");
-                        	button.setOnAction(event->{
-                        		ImageView imageView = new ImageView(new JFrame(),resultado.getCliente(),item);
-                        		imageView.setVisible(true);
-                        	});
+                        	button.setOnAction(event->abrirPainelVerificador(resultado.getCliente(),item));
                             setGraphic(button);
                             setText(null);
                         }
@@ -221,10 +252,7 @@ public class Tabelas {
                         else {
                         	Resultado resultado = tbResultado.getItems().get(getIndex());
                             button.setText("Abrir Arquivo");
-                        	button.setOnAction(event->{
-                        		ImageView imageView = new ImageView(new JFrame(),resultado.getCliente(),item);
-                        		imageView.setVisible(true);
-                        	});
+                            button.setOnAction(event->abrirPainelVerificador(resultado.getCliente(),item));
                             setGraphic(button);
                             setText(null);
                         }
@@ -233,7 +261,6 @@ public class Tabelas {
             };
             return cell;
         });
-
         tbResultado.setFixedCellSize(50);
         tbResultado.getColumns().add(colunaCliente);
         if(ckCodigo.isSelected()) {

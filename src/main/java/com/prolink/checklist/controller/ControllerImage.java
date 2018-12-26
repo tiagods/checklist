@@ -172,12 +172,14 @@ public class ControllerImage implements ComponentListener, ActionListener {
 		Path origem = getFile();
 		Path image = getFileImage(origem);
 		Mensageria mensageria = arquivos.get(origem);
-		ImageIcon ic2 = receberIcon(image.toString(),pnBody);
+		ImageIcon ic2 = receberIcon(image.toFile().getAbsolutePath(),pnBody);
 		lbIcon.setIcon(ic2);
 		txtValue1.setText(""+registroAtual);
 		txNome.setText(cliente.getNome());
 		txCnpj.setText(cliente.getCnpj());
 		txStatus.setText(cliente.getStatus());
+		txResultado.setText(mensageria.getDescricao());
+		
 		Color color = Color.GREEN;
 		if(mensageria.getStatus().equals(Mensageria.Status.ERRO)) color = Color.RED;
 		txNome.setBorder(new BevelBorder(BevelBorder.LOWERED, color, color, color, color));

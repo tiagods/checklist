@@ -10,9 +10,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class Conexao extends DBConfig {
-
     private Logger logger = LoggerFactory.getLogger(getClass());
-
     public Conexao() {
         super();
     }
@@ -22,7 +20,6 @@ public class Conexao extends DBConfig {
             return DriverManager.getConnection(getURL(),getUSER(),getPASSWORD());
         } catch (SQLException|ClassNotFoundException e) {
             e.printStackTrace();
-            logger.error(e.getMessage());
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Erro");
             alert.setHeaderText("Falha ao estabelecer conexao com o servidor");

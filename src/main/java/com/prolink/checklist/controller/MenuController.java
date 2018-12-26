@@ -50,7 +50,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import static com.prolink.checklist.enuns.Mensageria.VALIDADO;
 
 public class MenuController extends UtilsController implements Initializable{
-    @FXML
+    
+	@FXML
     private JFXTabPane tabPane;
     @FXML
     private Tab tab1, tab2, tab3;
@@ -149,14 +150,14 @@ public class MenuController extends UtilsController implements Initializable{
 
     private ClienteDAO clienteDAO = new ClienteDAO();
     private Path ultimaPastaVisitada=null;
-    private Tabelas tabelas = Tabelas.getInstance();
+    private Tabelas tabelas = Tabelas.getInstance(this);
     private UtilsFile utilsFile = new UtilsFile();
     
     private ArrayList<List<Indexador>> indexadors = new ArrayList<>();
     
-    public MenuController(Stage primaryStage) {
-    	this.stage=primaryStage;
-	}
+    public MenuController(Stage stage) {
+    	this.stage=stage;
+    }
     private void carregarPastaPDF(){
     	File file = utilsFile.carregarPasta(ultimaPastaVisitada);
         if(file!=null){
@@ -291,7 +292,7 @@ public class MenuController extends UtilsController implements Initializable{
         txLocalizacaoPDF.setOnMouseClicked(event -> carregarPastaPDF());
 
         btImpressao.setOnAction(event -> {
-            imprimir(tbResultado,ckCodigo,ckCnpj);
+            imprimir();
         });
         hboxPlanilha.setVisible(false);
         hboxLinhaPlanilha.setVisible(false);
@@ -301,15 +302,17 @@ public class MenuController extends UtilsController implements Initializable{
         cbCnpj.setDisable(true);
         ckCodigo.setSelected(true);
         ckCnpj.setSelected(true);
-        refreshCombos(getIndexadorDefault());
-
+        
+        if(clienteDAO.verificarConexao())
+        	refreshCombos(getIndexadorDefault());
+        else 
+        	tgbAutomaticoManual.setSelected(false);
+        
         txCnpjIgnorar.setPlainText("04110394000191");
 
         tbResultado.setFocusTraversable(true);
 
         tbRelatorio.setOnMouseClicked(event -> localizarIndexResultado());
-        
-        
     }
 
     private void localizarIndexResultado() {
@@ -326,10 +329,6 @@ public class MenuController extends UtilsController implements Initializable{
                             r.getArquivoNome().containsValue(m) ||
                             r.getMensageria().equals(m)
             ).collect(Collectors.toList());
-
-            tbResultado.getItems().forEach(c->{
-                if(c.getMensageria().equals(Mensageria.CNPJINVALIDO)) System.out.println(c.getCliente().toString()+"-"+c.getMensageria());
-            });
 
             int ultimo = list.size()-1;
             int ant = list.contains(anterior)?list.indexOf(anterior):-1;
@@ -356,7 +355,8 @@ public class MenuController extends UtilsController implements Initializable{
 	
 	@Override
     public void initialize(URL location, ResourceBundle resources) {
-    	combos();
+		super.initialize(tbResultado, ckCodigo, ckCnpj);
+		combos();
     	tabelas.tabelaFiltro(tbFiltro);
     	tabelas.tabelaRelatorio(tbRelatorio);
     	tabelas.tabelaResultado(tbResultado, ckCodigo, ckCnpj);
@@ -559,52 +559,6 @@ public class MenuController extends UtilsController implements Initializable{
             }
         };
         new Thread(task).start();
-    }
-
-    private List<Resumo> recalcular(){
-        List<Resumo> list = new ArrayList<>();
-
-        //VALIDADO("VALIDADO"),ERROLEITURA("ERRO DE LEITURA"),LEITURAOCR("VALIDADO POR IA"),
-        //        LEITURAMANUAL("VALIDADO MANUALMENTE"),ARQUIVOBRANCO("ARQUIVO EM BRANCO"),
-
-        int erroLeitura=0,arquivoBranco=0, validado = 0, arquivoNaoEncontrado=0, leituraOcr=0;
-        
-        for (Resultado resultado : tbResultado.getItems()) {
-            if(ckCnpj.isSelected() && ckCodigo.isSelected()) {
-                validado += resultado.getArquivoNome().containsValue(Mensageria.VALIDADO) ||
-                        resultado.getArquivoConteudo().containsValue(Mensageria.VALIDADO)?1:0;
-                arquivoNaoEncontrado += resultado.getArquivoNome().size() == 0 || resultado.getArquivoConteudo().size() == 0 ? 1 : 0;
-                arquivoBranco += resultado.getArquivoNome().containsValue(Mensageria.ARQUIVOBRANCO) ||
-                        resultado.getArquivoConteudo().containsValue(Mensageria.ARQUIVOBRANCO)?1:0;
-
-                erroLeitura += resultado.getArquivoNome().containsValue(Mensageria.ERROLEITURA) ||
-                        resultado.getArquivoConteudo().containsValue(Mensageria.ERROLEITURA)?1:0;
-                leituraOcr += resultado.getArquivoConteudo().containsValue(Mensageria.LEITURAOCR)?1:0;
-                
-            }
-            else if(!ckCnpj.isSelected()){
-                validado += resultado.getArquivoNome().containsValue(Mensageria.VALIDADO)?1:0;
-                arquivoNaoEncontrado += resultado.getArquivoNome().size()==0?1:0;
-                arquivoBranco += resultado.getArquivoNome().containsValue(Mensageria.ARQUIVOBRANCO)?1:0;
-                erroLeitura += resultado.getArquivoNome().containsValue(Mensageria.ERROLEITURA)?1:0;
-            }
-            else{
-                validado += resultado.getArquivoConteudo().containsValue(Mensageria.VALIDADO)?1:0;
-                arquivoNaoEncontrado += resultado.getArquivoConteudo().size()==0?1:0;
-                arquivoBranco += resultado.getArquivoConteudo().containsValue(Mensageria.ARQUIVOBRANCO)?1:0;
-                erroLeitura += resultado.getArquivoConteudo().containsValue(Mensageria.ERROLEITURA)?1:0;
-                leituraOcr += resultado.getArquivoConteudo().containsValue(Mensageria.LEITURAOCR)?1:0;
-            }
-        }
-        if(ckCnpj.isSelected()) list.add(new Resumo(Mensageria.CNPJINVALIDO,(int)tbResultado.getItems().stream().
-                    filter(c->!c.getCliente().isCnpjValido()).count()));
-        
-        list.add(new Resumo(Mensageria.VALIDADO,validado));
-        list.add(new Resumo(Mensageria.LEITURAOCR,leituraOcr));
-        list.add(new Resumo(Mensageria.ERROLEITURA, erroLeitura));
-        list.add(new Resumo(Mensageria.ARQUIVOBRANCO, arquivoBranco));
-        list.add(new Resumo(Mensageria.ARQUIVONAOENCONTRADO, arquivoNaoEncontrado));
-        return list;
     }
 
     private void refreshCombos(List<Indexador> indexadors){
