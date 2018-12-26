@@ -171,6 +171,7 @@ public class ImageController implements Initializable{
 			txResultado.setText(mensageria.getDescricao());
 			
 			String color = "green";
+			
 			if(mensageria.getStatus().equals(Mensageria.Status.ERRO)) color="red";
 			
 			String style = "-fx-border-color: "+color+" ; -fx-border-width: 2px;";

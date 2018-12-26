@@ -319,8 +319,7 @@ public class MenuController extends UtilsController implements Initializable{
     	Resumo resumo = tbRelatorio.getSelectionModel().getSelectedItem();
         if(resumo!=null && resumo.getTotal()>0){
             int index = tbResultado.getSelectionModel().getSelectedIndex();
-            System.out.println("Linha selecionada:"+index);
-
+            
             Resultado anterior = tbResultado.getSelectionModel().getSelectedItem();
 
             Mensageria m = resumo.getMensageria();

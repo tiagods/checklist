@@ -14,14 +14,17 @@
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 <?import org.fxutils.maskedtextfield.MaskedTextField?>
 
-<VBox prefHeight="700.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1">
+<VBox prefHeight="700.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1">
   <children>
-    <MenuBar VBox.vgrow="NEVER">
+    <MenuBar visible="false" VBox.vgrow="NEVER">
       <menus>
         <Menu mnemonicParsing="false" text="File">
           <items>
@@ -70,7 +73,14 @@
                            <children>
                               <VBox alignment="CENTER" layoutX="194.0" layoutY="163.0" prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                  <children>
-                                    <JFXButton fx:id="btInicio" text="Iniciar" />
+                                    <JFXButton fx:id="btInicio" text="Iniciar">
+                                       <graphic>
+                                          <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+                                             <image>
+                                                <Image url="@../images/button-play.png" />
+                                             </image>
+                                          </ImageView>
+                                       </graphic></JFXButton>
                                  </children>
                               </VBox>
                            </children>
@@ -85,51 +95,114 @@
                                  <children>
                                     <HBox alignment="CENTER" prefHeight="30.0" prefWidth="600.0">
                                        <children>
-                                          <Label text="Tipo:" />
+                                          <Label text="Tipo:">
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></Label>
                                           <JFXComboBox fx:id="cbObrigacao" prefHeight="26.0" prefWidth="300.0" />
                                        </children>
                                     </HBox>
                                     <HBox fx:id="hboxSelecao" alignment="CENTER">
                                        <children>
-                                          <JFXToggleButton fx:id="tgbAutomaticoManual" selected="true" size="7.0" text="Base Automatica" />
+                                          <JFXToggleButton fx:id="tgbAutomaticoManual" selected="true" size="7.0" text="Base Automatica">
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></JFXToggleButton>
                                        </children>
                                     </HBox>
                                     <HBox fx:id="hboxPlanilha" alignment="CENTER" prefHeight="40.0">
                                        <children>
-                                          <JFXTextField fx:id="txLocalizacaoDatabase" editable="false" prefHeight="26.0" prefWidth="420.0" promptText="Clique aqui ou arraste uma planilha (XLS ou XLSX) ate aqui" />
-                                       </children>
-                                    </HBox>
-                                    <HBox fx:id="hboxPDF" alignment="CENTER" layoutX="10.0" layoutY="325.0" prefHeight="40.0">
-                                       <children>
-                                          <JFXTextField fx:id="txLocalizacaoPDF" editable="false" prefHeight="26.0" prefWidth="420.0" promptText="Clique aqui ou arraste a pasta dos arquivos ate aqui" />
+                                          <JFXTextField fx:id="txLocalizacaoDatabase" editable="false" prefHeight="26.0" prefWidth="420.0" promptText="Clique aqui ou arraste uma planilha (XLS ou XLSX) ate aqui">
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></JFXTextField>
                                        </children>
                                     </HBox>
                                     <HBox fx:id="hboxLinhaPlanilha" alignment="CENTER" layoutX="10.0" layoutY="234.0" prefHeight="40.0" prefWidth="600.0">
                                        <children>
-                                          <Label text="Os titulos da planilha estão na linha:" />
+                                          <Label text="Os titulos da planilha estão na linha:">
+                                             <HBox.margin>
+                                                <Insets right="20.0" />
+                                             </HBox.margin>
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></Label>
                                           <JFXComboBox fx:id="cbLinhaExcel" />
+                                       </children>
+                                    </HBox>
+                                    <HBox fx:id="hboxPDF" alignment="CENTER" layoutX="10.0" layoutY="325.0" prefHeight="40.0">
+                                       <children>
+                                          <JFXTextField fx:id="txLocalizacaoPDF" editable="false" prefHeight="26.0" prefWidth="420.0" promptText="Clique aqui para selecionar a localização dos arquivos">
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></JFXTextField>
                                        </children>
                                     </HBox>
                                     <HBox fx:id="hboxCombos" alignment="CENTER" prefHeight="40.0" prefWidth="600.0">
                                        <children>
-                                          <Label text="Nome(Opcional):" />
-                                          <JFXComboBox fx:id="cbNome" />
-                                          <Label text="Status(Opcional):" />
-                                          <JFXComboBox fx:id="cbStatus" />
+                                          <Label minWidth="110.0" text="Nome(Opcional):">
+                                             <padding>
+                                                <Insets right="20.0" />
+                                             </padding>
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></Label>
+                                          <JFXComboBox fx:id="cbNome">
+                                             <padding>
+                                                <Insets right="20.0" />
+                                             </padding></JFXComboBox>
+                                          <Label minWidth="110.0" text="Status(Opcional):">
+                                             <padding>
+                                                <Insets right="20.0" />
+                                             </padding>
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></Label>
+                                          <JFXComboBox fx:id="cbStatus">
+                                             <padding>
+                                                <Insets right="20.0" />
+                                             </padding></JFXComboBox>
                                        </children>
                                     </HBox>
                                     <HBox fx:id="hboxCodigo" alignment="CENTER" layoutX="10.0" layoutY="249.0" prefHeight="40.0" prefWidth="600.0">
                                        <children>
-                                          <JFXCheckBox fx:id="ckCodigo" text="O nome do arquivo iniciara pelo CODIGO:" />
+                                          <JFXCheckBox fx:id="ckCodigo" text="O nome do arquivo iniciara pelo CODIGO:">
+                                             <padding>
+                                                <Insets right="20.0" />
+                                             </padding>
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></JFXCheckBox>
                                           <JFXComboBox fx:id="cbCodigo" />
                                        </children>
                                     </HBox>
                                     <HBox fx:id="hboxCodigo1" alignment="CENTER" layoutX="10.0" layoutY="274.0" prefHeight="40.0" prefWidth="600.0">
                                        <children>
-                                          <JFXCheckBox fx:id="ckCnpj" text="O conteudo do arquivo(PDF) deverá conter o CNPJ:" />
-                                          <JFXComboBox fx:id="cbCnpj" />
-                                          <Label text="Ignorar CNPJ:" />
-                                          <MaskedTextField fx:id="txCnpjIgnorar" mask="##.###.###/####-##" prefHeight="26.0" prefWidth="170.0" />
+                                          <JFXCheckBox fx:id="ckCnpj" text="O conteudo do arquivo(PDF) deverá conter o CNPJ:">
+                                             <HBox.margin>
+                                                <Insets right="20.0" />
+                                             </HBox.margin>
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></JFXCheckBox>
+                                          <JFXComboBox fx:id="cbCnpj">
+                                             <HBox.margin>
+                                                <Insets right="20.0" />
+                                             </HBox.margin></JFXComboBox>
+                                          <Label text="Ignorar CNPJ:">
+                                             <HBox.margin>
+                                                <Insets right="20.0" />
+                                             </HBox.margin>
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></Label>
+                                          <MaskedTextField fx:id="txCnpjIgnorar" alignment="CENTER" mask="##.###.###/####-##" prefHeight="26.0" prefWidth="170.0">
+                                             <HBox.margin>
+                                                <Insets right="20.0" />
+                                             </HBox.margin>
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></MaskedTextField>
                                        </children>
                                     </HBox>
                                     <HBox fx:id="hboxCodigo11" alignment="CENTER" layoutX="10.0" layoutY="294.0" prefHeight="40.0" prefWidth="600.0">
@@ -137,19 +210,37 @@
                                           <Label text="Nome Obrigatorio de Arquivo:">
                                              <HBox.margin>
                                                 <Insets right="20.0" />
-                                             </HBox.margin></Label>
-                                          <JFXTextField fx:id="txNomeArquivo" prefHeight="26.0" prefWidth="350.0" promptText="O arquivo deverá conter esse nome antes de ser analisado" />
+                                             </HBox.margin>
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></Label>
+                                          <JFXTextField fx:id="txNomeArquivo" editable="false" prefHeight="30.0" prefWidth="368.0" promptText="O arquivo deverá conter esse nome antes de ser analisado">
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></JFXTextField>
                                        </children>
                                     </HBox>
                                     <HBox fx:id="hboxFiltro" alignment="CENTER" prefHeight="40.0" prefWidth="600.0">
                                        <children>
-                                          <Label text="Filtro Special:" />
+                                          <Label text="Filtro Special:">
+                                             <HBox.margin>
+                                                <Insets right="20.0" />
+                                             </HBox.margin>
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></Label>
                                           <JFXComboBox fx:id="cbFiltroSpecial" prefHeight="26.0" prefWidth="276.0" />
                                        </children>
                                     </HBox>
                                     <VBox fx:id="vboxFiltroTable" alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
                                        <children>
-                                          <JFXCheckBox fx:id="ckSelecionarFiltro" prefHeight="18.0" prefWidth="365.0" text="Selecionar Tudo" />
+                                          <JFXCheckBox fx:id="ckSelecionarFiltro" prefHeight="18.0" prefWidth="365.0" text="Selecionar Tudo">
+                                             <VBox.margin>
+                                                <Insets />
+                                             </VBox.margin>
+                                             <font>
+                                                <Font size="14.0" />
+                                             </font></JFXCheckBox>
                                           <HBox alignment="CENTER">
                                              <children>
                                                 <TableView fx:id="tbFiltro" prefHeight="130.0" prefWidth="365.0" />
@@ -157,7 +248,14 @@
                                           </HBox>
                                        </children>
                                     </VBox>
-                                    <JFXButton fx:id="btProcessar" text="Processar" />
+                                    <JFXButton fx:id="btProcessar" text="Processar">
+                                       <graphic>
+                                          <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+                                             <image>
+                                                <Image url="@../images/button-play.png" />
+                                             </image>
+                                          </ImageView>
+                                       </graphic></JFXButton>
                                  </children>
                               </VBox>
                            </children>
@@ -170,9 +268,9 @@
                            <children>
                               <VBox layoutX="112.0" layoutY="79.0" prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                  <children>
-                                    <HBox>
+                                    <HBox prefHeight="310.0" prefWidth="900.0">
                                        <children>
-                                          <TableView fx:id="tbRelatorio" prefHeight="285.0" prefWidth="500.0" />
+                                          <TableView fx:id="tbRelatorio" prefHeight="163.0" prefWidth="650.0" />
                                        </children>
                                     </HBox>
                                     <HBox prefHeight="100.0" prefWidth="200.0">
@@ -182,8 +280,22 @@
                                     </HBox>
                                     <HBox alignment="TOP_RIGHT" prefHeight="31.0" prefWidth="600.0">
                                        <children>
-                                          <JFXButton fx:id="btImpressao" text="Impressao" />
-                                          <JFXButton fx:id="btCancelar" layoutX="534.0" layoutY="10.0" text="Cancelar" />
+                                          <JFXButton fx:id="btImpressao" text="Impressao">
+                                             <graphic>
+                                                <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+                                                   <image>
+                                                      <Image url="@../images/button-xls.png" />
+                                                   </image>
+                                                </ImageView>
+                                             </graphic></JFXButton>
+                                          <JFXButton fx:id="btCancelar" layoutX="534.0" layoutY="10.0" text="Cancelar">
+                                             <graphic>
+                                                <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+                                                   <image>
+                                                      <Image url="@../images/button-stop.png" />
+                                                   </image>
+                                                </ImageView>
+                                             </graphic></JFXButton>
                                        </children>
                                     </HBox>
                                     <TableView fx:id="tbResultado" prefHeight="448.0" prefWidth="900.0" />

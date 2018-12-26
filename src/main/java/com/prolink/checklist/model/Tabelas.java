@@ -84,18 +84,19 @@ public class Tabelas {
         colunaEditar.setPrefWidth(40);
         TableColumn<Indexador, String> colunaNome = new TableColumn<>("");
         colunaNome.setCellValueFactory(new PropertyValueFactory<>("valor"));
-        colunaNome.setPrefWidth(150);
+        colunaNome.setMinWidth(150);
         tbFiltro.getColumns().addAll(colunaEditar,colunaNome);
     }
     public void tabelaRelatorio(TableView<Resumo> tbRelatorio){
     	this.tbRelatorio=tbRelatorio;
-        TableColumn<Resumo, Mensageria> colunaNome = new TableColumn<>("Nome");
+        TableColumn<Resumo, Mensageria> colunaNome = new TableColumn<>("NOME");
         colunaNome.setCellValueFactory(new PropertyValueFactory<>("mensageria"));
-
-        TableColumn<Resumo, Integer> colunaValor = new TableColumn<>("Total");
+        colunaNome.setPrefWidth(300);
+        
+        TableColumn<Resumo, Integer> colunaValor = new TableColumn<>("TOTAL");
         colunaValor.setCellValueFactory(new PropertyValueFactory<>("total"));
 
-        TableColumn<Resumo, Boolean> colunaIntervencao = new TableColumn<>("");
+        TableColumn<Resumo, Boolean> colunaIntervencao = new TableColumn<>("DESCRICAO");
         colunaIntervencao.setCellValueFactory(new PropertyValueFactory<>("intervencao"));
         colunaIntervencao.setCellFactory((TableColumn<Resumo, Boolean> param) -> {
             final TableCell<Resumo, Boolean> cell = new TableCell<Resumo, Boolean>() {
@@ -116,6 +117,7 @@ public class Tabelas {
             };
             return cell;
         });
+        colunaIntervencao.setPrefWidth(200);
         tbRelatorio.getColumns().addAll(colunaNome,colunaValor,colunaIntervencao);
     }
     public void tabelaResultado(TableView<Resultado> tbResultado,JFXCheckBox ckCodigo,JFXCheckBox ckCnpj){
@@ -169,7 +171,8 @@ public class Tabelas {
             };
             return cell;
         });
-
+        colunaId.setPrefWidth(250);
+        
         TableColumn<Resultado, Map<Path,Mensageria>> colunaBotaoId = new TableColumn<>("");
         colunaBotaoId.setCellValueFactory(new PropertyValueFactory<>("arquivoNome"));
         colunaBotaoId.setCellFactory((TableColumn<Resultado, Map<Path,Mensageria>> param) -> {
@@ -187,7 +190,7 @@ public class Tabelas {
                         }
                         else {
                         	Resultado resultado = tbResultado.getItems().get(getIndex());
-                            button.setText("Abrir Arquivo");
+                            button.setText("Abrir");
                         	button.setOnAction(event->abrirPainelVerificador(resultado.getCliente(),item));
                             setGraphic(button);
                             setText(null);
@@ -198,7 +201,6 @@ public class Tabelas {
             return cell;
         });
 
-        
         TableColumn<Resultado, Map<Path,Mensageria>> colunaConteudo = new TableColumn<>("CONTEUDO DO ARQUIVO");
         colunaConteudo.setCellValueFactory(new PropertyValueFactory<>("arquivoConteudo"));
         colunaConteudo.setCellFactory((TableColumn<Resultado, Map<Path,Mensageria>> param) -> {
@@ -234,6 +236,8 @@ public class Tabelas {
             };
             return cell;
         });
+        colunaConteudo.setPrefWidth(250);
+        
         TableColumn<Resultado, Map<Path,Mensageria>> colunaBotaoConteudo = new TableColumn<>("");
         colunaBotaoConteudo.setCellValueFactory(new PropertyValueFactory<>("arquivoConteudo"));
         colunaBotaoConteudo.setCellFactory((TableColumn<Resultado, Map<Path,Mensageria>> param) -> {
@@ -251,7 +255,7 @@ public class Tabelas {
                         }
                         else {
                         	Resultado resultado = tbResultado.getItems().get(getIndex());
-                            button.setText("Abrir Arquivo");
+                            button.setText("Abrir");
                             button.setOnAction(event->abrirPainelVerificador(resultado.getCliente(),item));
                             setGraphic(button);
                             setText(null);
@@ -261,7 +265,7 @@ public class Tabelas {
             };
             return cell;
         });
-        tbResultado.setFixedCellSize(50);
+        tbResultado.setFixedCellSize(75);
         tbResultado.getColumns().add(colunaCliente);
         if(ckCodigo.isSelected()) {
             tbResultado.getColumns().add(colunaId);
