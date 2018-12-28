@@ -214,7 +214,7 @@
                                              <font>
                                                 <Font size="14.0" />
                                              </font></Label>
-                                          <JFXTextField fx:id="txNomeArquivo" editable="false" prefHeight="30.0" prefWidth="368.0" promptText="O arquivo deverá conter esse nome antes de ser analisado">
+                                          <JFXTextField fx:id="txNomeArquivo" editable="true" prefHeight="30.0" prefWidth="368.0" promptText="O arquivo deverá conter esse nome antes de ser analisado">
                                              <font>
                                                 <Font size="14.0" />
                                              </font></JFXTextField>
