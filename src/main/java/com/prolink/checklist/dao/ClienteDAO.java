@@ -1,8 +1,10 @@
 package com.prolink.checklist.dao;
-
+import com.github.davidmoten.rx.jdbc.*;
 import com.prolink.checklist.model.Indexador;
 import com.prolink.factory.Conexao;
 import com.prolink.checklist.model.Cliente;
+import io.reactiverse.pgclient.*;
+import io.reactivex.rxjava3.core.Observable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,13 +13,41 @@ import java.sql.SQLException;
 import java.text.Normalizer;
 import java.util.*;
 
-import org.postgresql.util.PSQLException;
-
-public class ClienteDAO extends Conexao{
+public class ClienteDAO extends Conexao {
 	public boolean verificarConexao() {
 		return getCon()!=null;
 	}
-	public Set<Indexador> findBy(Indexador indexador){
+
+    public static Observable list() {
+        List<Cliente> result = new ArrayList<>();
+        PgPoolOptions options = new PgPoolOptions()
+                .setPort(5432)
+                .setHost("localhost")
+                .setDatabase("processos")
+                .setUser("postgres")
+                .setPassword("admin");
+
+        PgPool client = PgClient.pool(options);
+        client.query("SELECT * FROM cliente", ar -> {
+            if (ar.succeeded()) {
+                ar.result().forEach(rs -> {
+                    Cliente c = new Cliente();
+                    c.setId(rs.getInteger(1));
+                    c.setNome(novoNome(rs.getString(2)).toUpperCase());
+                    c.setStatus(rs.getString(3));
+                    String cnpj = rs.getString(4);
+                    c.setCnpj(cnpj == null ? "" : cnpj);
+                    result.add(c);
+                });
+            } else {
+                System.out.println("Failure: " + ar.cause().getMessage());
+            }
+            client.close();
+        });
+        return Observable.just(result);
+    }
+
+    public Set<Indexador> findBy(Indexador indexador){
         Set<Indexador> list = new HashSet<>();
         Connection con = null;
         try {
@@ -95,7 +125,7 @@ public class ClienteDAO extends Conexao{
             return null;
         }finally {try {if(con!=null) con.close();}catch (SQLException e){}}
     }
-    private String novoNome(String nome){
+    private static String novoNome(String nome){
         String novo= Normalizer.normalize(nome, Normalizer.Form.NFD)
                 .replaceAll("[^\\p{ASCII}]", "");
         return novo;

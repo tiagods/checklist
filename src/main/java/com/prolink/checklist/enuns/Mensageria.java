@@ -23,7 +23,6 @@ public enum Mensageria {
     private String descricao;
     private Status status;
     private String resumo;
-    private
     Mensageria(String resumo,Status status,String descricao){
         this.descricao = descricao;
         this.status=status;

@@ -24,6 +24,7 @@ import com.prolink.checklist.util.LeitoraPDF;
 import com.prolink.checklist.util.UtilsFile;
 import com.prolink.model.CadastroBean;
 import com.prolink.model.ExcelGenerico;
+import io.reactivex.rxjava3.core.Observable;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -158,6 +159,7 @@ public class MenuController extends UtilsController implements Initializable{
     public MenuController(Stage stage) {
     	this.stage=stage;
     }
+
     private void carregarPastaPDF(){
     	File file = utilsFile.carregarPasta(ultimaPastaVisitada);
         if(file!=null){
@@ -179,8 +181,9 @@ public class MenuController extends UtilsController implements Initializable{
             ultimaPastaVisitada = file.toPath();
         }
     }
+
     private void carregarDatabase() {
-    	File file = utilsFile.carregarArquivo(ultimaPastaVisitada);
+        File file = utilsFile.carregarArquivo(ultimaPastaVisitada);
         if(file!=null){
             txLocalizacaoDatabase.setText(file.toString());
             ultimaPastaVisitada = file.getParentFile().toPath();
@@ -193,7 +196,9 @@ public class MenuController extends UtilsController implements Initializable{
         tab2.setDisable(true);
         tab3.setDisable(true);
 
-        cbLinhaExcel.valueProperty().addListener(event->refreshCombos(indexadors.get(cbLinhaExcel.getValue()-1)));
+        cbLinhaExcel.valueProperty().addListener(event->
+                refreshCombos(indexadors.get(cbLinhaExcel.getValue()-1))
+        );
         
         tabPane.getSelectionModel().selectFirst();
         btInicio.setOnAction(event -> {
@@ -211,18 +216,16 @@ public class MenuController extends UtilsController implements Initializable{
             tab2.setDisable(false);
             tab1.setDisable(true);
         });
+
         cbObrigacao.getItems().addAll(ObrigacaoTipo.values());
         cbObrigacao.getSelectionModel().selectFirst();
         cbObrigacao.valueProperty().addListener((observable, oldValue, newValue) -> {
             hboxSelecao.setVisible(newValue!=null);
             hboxPDF.setVisible(true);
-            if(tgbAutomaticoManual.isSelected())
+            if(tgbAutomaticoManual.isSelected()) {
                 refreshCombos(getIndexadorDefault());
-            else{
-                if(!txLocalizacaoDatabase.getText().equals("")) {
-                    processarExcel();
-                }
-
+            } else if(!txLocalizacaoDatabase.getText().equals("")) {
+                processarExcel();
             }
         });
         tgbAutomaticoManual.selectedProperty().addListener((observable, oldValue, newValue) -> {
@@ -234,37 +237,32 @@ public class MenuController extends UtilsController implements Initializable{
             cbCodigo.setDisable(newValue);
             cbCnpj.setDisable(newValue);
             if(newValue) {
-                ckCodigo.setSelected(newValue);
-                ckCnpj.setSelected(newValue);
+                ckCodigo.setSelected(true);
+                ckCnpj.setSelected(true);
                 refreshCombos(getIndexadorDefault());
-            }
-            else{
+            } else {
                 refreshCombos(null);
                 if(!txLocalizacaoDatabase.getText().equals("")) {
                     processar();
                 }
             }
         });
-        txLocalizacaoDatabase.setOnMouseClicked(event -> {
-            carregarDatabase();
-        });
+        txLocalizacaoDatabase.setOnMouseClicked(event -> carregarDatabase());
 
         cbFiltroSpecial.valueProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue!=null) {
-                if(tgbAutomaticoManual.isSelected())
+                if(tgbAutomaticoManual.isSelected()) {
                     tbFiltro.getItems().setAll(clienteDAO.findBy(cbFiltroSpecial.getValue()));
-                else{
-                    List<Indexador> inx = new ArrayList<>();
-                    for(List<Indexador> list : indexadors){
-                        Optional<Indexador> result = list.stream().filter(p->p.getIndex()==newValue.getIndex()).findFirst();
-                        if(result.isPresent()) inx.add(result.get());
-                    }
+                } else {
+                    List<Indexador> inx = indexadors.stream()
+                            .flatMap(Collection::parallelStream)
+                            .filter(p->p.getIndex()==newValue.getIndex())
+                            .collect(Collectors.toList());
                     if(!inx.isEmpty()) inx.remove(0);
                     tbFiltro.getItems().setAll(inx);
                     tbFiltro.refresh();
                 }
-            }
-            else{
+            } else {
                 tbFiltro.getItems().clear();
             }
         });
@@ -284,16 +282,13 @@ public class MenuController extends UtilsController implements Initializable{
         ckCnpj.setSelected(true);
 
         ckSelecionarFiltro.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            tbFiltro.getItems().stream().forEach(c->c.setHabilitado(newValue)); 
-            tbFiltro.refresh();
-            }
-        );
-
+                    tbFiltro.getItems().stream().forEach(c->c.setHabilitado(newValue));
+                    tbFiltro.refresh();
+                });
         txLocalizacaoPDF.setOnMouseClicked(event -> carregarPastaPDF());
 
-        btImpressao.setOnAction(event -> {
-            imprimir();
-        });
+        btImpressao.setOnAction(event -> imprimir());
+
         hboxPlanilha.setVisible(false);
         hboxLinhaPlanilha.setVisible(false);
         hboxCombos.setVisible(false);
@@ -309,9 +304,7 @@ public class MenuController extends UtilsController implements Initializable{
         	tgbAutomaticoManual.setSelected(false);
         
         txCnpjIgnorar.setPlainText("04110394000191");
-
         tbResultado.setFocusTraversable(true);
-
         tbRelatorio.setOnMouseClicked(event -> localizarIndexResultado());
     }
 
@@ -364,17 +357,20 @@ public class MenuController extends UtilsController implements Initializable{
         LeitorExcel excel = new LeitorExcel();
         indexadors = excel.readWorkbook(new File(txLocalizacaoDatabase.getText()));
         int linhas=indexadors.size();
-        int colunas=indexadors.get(0).size()>0?indexadors.get(0).size():0;
+        int colunas=indexadors.get(0).size()>0?indexadors.get(0).size() : 0;
+
         if(linhas<2 || colunas==0) {
-            alert(Alert.AlertType.ERROR, "Planilha invalida", "Tente novamente", "A planilha deverá ter no minimo 2 linhas e 1 coluna");
+            alert(Alert.AlertType.ERROR,
+                    "Planilha invalida",
+                    "Tente novamente",
+                    "A planilha deverá ter no minimo 2 linhas e 1 coluna");
             txLocalizacaoDatabase.setText("");
             refreshCombos(null);
-        }
-        else{
-            Set<Integer> linhaset = new TreeSet<>();
-            for(int i = 1; i < linhas-1; i++){
-                linhaset.add(i);
-            }
+        } else {
+            Set<Integer> linhaset = Stream.iterate(1, n -> n+1)
+                    .limit(linhas)
+                    .collect(Collectors.toSet());
+
             cbLinhaExcel.getItems().clear();
             cbLinhaExcel.getItems().addAll(linhaset);
             cbLinhaExcel.setValue(1);
@@ -399,7 +395,10 @@ public class MenuController extends UtilsController implements Initializable{
                 return;
             }
             else if(cbFiltroSpecial.getValue()!=null){
-                List<Indexador> selecao = tbFiltro.getItems().stream().filter(c->c.isHabilitado()).collect(Collectors.toList());
+                List<Indexador> selecao = tbFiltro.getItems()
+                        .stream()
+                        .filter(c->c.isHabilitado())
+                        .collect(Collectors.toList());
                 novos = new ClienteDAO().listarPor(cbFiltroSpecial.getValue(),selecao);
             }
             else{
@@ -567,7 +566,7 @@ public class MenuController extends UtilsController implements Initializable{
         cbFiltroSpecial.getItems().clear();
         cbCnpj.getItems().clear();
         tbFiltro.getItems().clear();
-        
+
         if(cbObrigacao.getValue()!=null) {
             if(indexadors!=null) {
                 cbCodigo.getItems().setAll(indexadors);
@@ -580,12 +579,11 @@ public class MenuController extends UtilsController implements Initializable{
                 cbCodigo.getSelectionModel().select(0);
                 cbNome.getSelectionModel().select(1);
                 cbStatus.getSelectionModel().select(2);
-                cbFiltroSpecial.getSelectionModel().select(2);
                 cbCnpj.getSelectionModel().select(3);
+                cbFiltroSpecial.getSelectionModel().select(2);
                 tbFiltro.getItems().setAll(clienteDAO.findBy(cbFiltroSpecial.getValue()));
                 ckSelecionarFiltro.setSelected(true);
-            }
-            else{
+            } else {
                 cbCodigo.getSelectionModel().select(0);
                 cbNome.getSelectionModel().select(0);
                 cbStatus.getSelectionModel().select(0);

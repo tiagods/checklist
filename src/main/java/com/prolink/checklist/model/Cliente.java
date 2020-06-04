@@ -1,5 +1,7 @@
 package com.prolink.checklist.model;
 
+import com.github.davidmoten.rx.jdbc.annotations.Column;
+
 import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

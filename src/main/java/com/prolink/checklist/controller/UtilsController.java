@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.jfoenix.controls.JFXCheckBox;
 import com.prolink.checklist.enuns.Mensageria;
@@ -30,11 +31,13 @@ public abstract class UtilsController {
 	
 	public UtilsController(){
 	}
+
 	public void initialize(TableView<Resultado> tbResultado,JFXCheckBox ckCodigo,JFXCheckBox ckCnpj){
 		this.tbResultado=tbResultado;;
 		this.ckCodigo=ckCodigo;
 		this.ckCnpj=ckCnpj;
 	}
+
 	public void alert(Alert.AlertType type,String titulo,String assunto, String mensagem){
         Alert alert = new Alert(type);
         alert.setTitle(titulo);
@@ -44,6 +47,7 @@ public abstract class UtilsController {
             alert.getDialogPane().setMinSize(600,200);
         alert.showAndWait();
     }
+
     public List<Indexador> getIndexadorDefault(){
         List<Indexador> index = new ArrayList<>();
         index.add(new Indexador(0, "COD"));
@@ -56,7 +60,7 @@ public abstract class UtilsController {
     public void imprimir() {
     	Integer[] larguraColunas = new Integer[]{12,15,20,20,43,43,43,43};
         ArrayList<ArrayList<String>> arrayList = new ArrayList<>();
-        ArrayList<String> array1 = new ArrayList<String>();
+        ArrayList<String> array1 = new ArrayList<>();
         array1.add("CODIGO");
         array1.add("STATUS");
         array1.add("CNPJ");
@@ -91,7 +95,6 @@ public abstract class UtilsController {
                         .stream()
                         .map(Mensageria::toString)
                         .collect(Collectors.joining(";")));
-
             }
             array2.add(resultado.getArquivoConteudo()
                     .keySet()
@@ -145,7 +148,7 @@ public abstract class UtilsController {
         a8.add(Mensageria.RECUSADOMANUALMENTE.getDescricao());
 
         
-        arrayList.add(new ArrayList<String>());
+        arrayList.add(new ArrayList<>());
 
         ArrayList<String> arrayLegenda = new ArrayList<String>();
         arrayLegenda.add("LEGENDAS");
